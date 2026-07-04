@@ -12,8 +12,11 @@ import {
   GraduationCap,
   Users,
   LogOut,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useStore } from "@/lib/store";
 
 function LogoutButton({ className }: { className?: string }) {
   async function handleLogout() {
@@ -47,6 +50,7 @@ const NAV_ITEMS = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const { loading, loadError, refresh } = useStore();
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,7 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="mx-3 mb-2 rounded-2xl bg-primary-50 p-4 text-xs text-primary-800">
-          💡 ระบบนี้เก็บข้อมูลไว้ในเบราว์เซอร์เพื่อทดลองใช้งาน พร้อมต่อฐานข้อมูลจริงได้ทันที
+          💡 ข้อมูลทั้งหมดบันทึกลงฐานข้อมูล Supabase จริง ไม่หายเมื่อปิดเว็บ
         </div>
         <LogoutButton className="mx-3 mb-3" />
       </aside>
@@ -106,7 +110,31 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main content */}
       <main className="pb-24 md:ml-64 md:pb-8">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-24 text-muted-foreground">
+              <Loader2 className="h-6 w-6 animate-spin text-primary-500" />
+              <p className="text-sm">กำลังโหลดข้อมูลจากฐานข้อมูล...</p>
+            </div>
+          ) : loadError ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-24 text-center">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+              <p className="max-w-sm text-sm font-medium text-destructive">{loadError}</p>
+              <p className="max-w-sm text-xs text-muted-foreground">
+                ตรวจสอบว่าตั้งค่า SUPABASE_URL และ SUPABASE_SERVICE_ROLE_KEY ถูกต้องแล้วหรือยัง
+              </p>
+              <button
+                type="button"
+                onClick={() => refresh()}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white"
+              >
+                ลองใหม่
+              </button>
+            </div>
+          ) : (
+            children
+          )}
+        </div>
       </main>
 
       {/* Mobile bottom nav */}

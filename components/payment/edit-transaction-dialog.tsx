@@ -54,10 +54,10 @@ export function EditTransactionDialog({ transaction }: { transaction: Transactio
     .map((e) => getCourse(e.courseId))
     .filter((c): c is NonNullable<typeof c> => Boolean(c));
 
-  function handleSave() {
+  async function handleSave() {
     const numericAmount = Number(amount);
     if (!studentId || !courseId || !numericAmount || numericAmount <= 0) return;
-    updateTransaction(transaction.id, {
+    const ok = await updateTransaction(transaction.id, {
       studentId,
       courseId,
       amount: numericAmount,
@@ -65,13 +65,13 @@ export function EditTransactionDialog({ transaction }: { transaction: Transactio
       slipImage: method === "transfer" ? slipImage : undefined,
       note: note || undefined,
     });
-    setOpen(false);
+    if (ok) setOpen(false);
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (window.confirm("ลบรายการรับเงินนี้ใช่ไหม? ลบแล้วกู้คืนไม่ได้")) {
-      deleteTransaction(transaction.id);
-      setOpen(false);
+      const ok = await deleteTransaction(transaction.id);
+      if (ok) setOpen(false);
     }
   }
 

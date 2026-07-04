@@ -11,15 +11,15 @@ import { GraduationCap, UserPlus, Trash2 } from "lucide-react";
 export default function ManagePage() {
   const { students, courses, deleteStudent, deleteCourse } = useStore();
 
-  function handleDeleteCourse(id: string, name: string) {
+  async function handleDeleteCourse(id: string, name: string) {
     if (window.confirm(`ลบคอร์ส "${name}" ใช่ไหม? นักเรียนที่ลงทะเบียนคอร์สนี้จะถูกถอนออกด้วย`)) {
-      deleteCourse(id);
+      await deleteCourse(id);
     }
   }
 
-  function handleDeleteStudent(id: string, name: string) {
+  async function handleDeleteStudent(id: string, name: string) {
     if (window.confirm(`ลบนักเรียน "${name}" ใช่ไหม? การลงทะเบียนคอร์สของนักเรียนคนนี้จะถูกลบด้วย`)) {
-      deleteStudent(id);
+      await deleteStudent(id);
     }
   }
 

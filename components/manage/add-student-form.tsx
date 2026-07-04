@@ -37,32 +37,40 @@ export function AddStudentForm() {
     setOverrides({});
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  const [submitting, setSubmitting] = React.useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name || !grade) return;
+    if (!name || !grade || submitting) return;
 
-    const studentId = addStudent({
-      name,
-      grade,
-      parentName,
-      parentLine,
-      parentFacebook,
-      phone: phone || undefined,
-    });
+    setSubmitting(true);
+    try {
+      const studentId = await addStudent({
+        name,
+        grade,
+        parentName,
+        parentLine,
+        parentFacebook,
+        phone: phone || undefined,
+      });
+      if (!studentId) return;
 
-    courses.forEach((course) => {
-      if (!selectedCourses[course.id]) return;
-      const overrideValue = Number(overrides[course.id]) || 0;
-      if (course.type === "private") {
-        addEnrollment({ studentId, courseId: course.id, monthlyHours: overrideValue });
-      } else {
-        addEnrollment({ studentId, courseId: course.id, monthlyFee: overrideValue });
+      for (const course of courses) {
+        if (!selectedCourses[course.id]) continue;
+        const overrideValue = Number(overrides[course.id]) || 0;
+        if (course.type === "private") {
+          await addEnrollment({ studentId, courseId: course.id, monthlyHours: overrideValue });
+        } else {
+          await addEnrollment({ studentId, courseId: course.id, monthlyFee: overrideValue });
+        }
       }
-    });
 
-    resetForm();
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 2500);
+      resetForm();
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2500);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -155,8 +163,8 @@ export function AddStudentForm() {
       </div>
 
       <div className="flex items-center gap-3 pt-1">
-        <Button type="submit">
-          <UserPlus className="h-4 w-4" /> เพิ่มนักเรียน
+        <Button type="submit" disabled={submitting}>
+          <UserPlus className="h-4 w-4" /> {submitting ? "กำลังบันทึก..." : "เพิ่มนักเรียน"}
         </Button>
         {success && (
           <span className="flex items-center gap-1.5 text-sm font-medium text-success">

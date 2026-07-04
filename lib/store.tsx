@@ -12,31 +12,22 @@ import type {
   ExpenseCategory,
   PaymentMethod,
 } from "./types";
-import {
-  seedStudents,
-  seedCourses,
-  seedEnrollments,
-  seedAttendance,
-  seedTransactions,
-  seedExpenses,
-} from "./mock-data";
-import { uid } from "./utils";
 
 // ---------------------------------------------------------------------------
-// This Context is a client-side, in-memory data layer that stands in for a
-// real backend. Every mutation function below (addTransaction, addExpense,
-// markAttendance, ...) is written as a single call-site so that swapping the
-// body for `await fetch("/api/...")` + refetch/optimistic-update is a small,
-// localized change per function — the components themselves never touch
-// state directly, only these actions.
+// This Context is the app's single data-access layer, now backed by a real
+// Postgres database (Supabase) instead of localStorage. Every mutation
+// function below calls a Next.js API route (app/api/**), which is the only
+// thing allowed to talk to Supabase (using a server-only service-role key —
+// see lib/supabase.ts). Components never call fetch() directly; they only
+// ever use the functions exposed by useStore().
 //
-// Data is mirrored to localStorage purely so the demo survives page reloads;
-// remove that when a real database is connected.
+// Each mutation is optimistic-free but still fast: it awaits the API call,
+// and only updates React state once the database confirms the write. If the
+// request fails, an alert explains what happened and local state is left
+// untouched, so the UI never drifts out of sync with the database.
 // ---------------------------------------------------------------------------
 
-const STORAGE_KEY = "chula-iq-admin-store-v1";
-
-interface PersistedState {
+interface DataState {
   students: Student[];
   courses: Course[];
   enrollments: Enrollment[];
@@ -45,24 +36,37 @@ interface PersistedState {
   expenses: Expense[];
 }
 
-function seedState(): PersistedState {
-  return {
-    students: seedStudents,
-    courses: seedCourses,
-    enrollments: seedEnrollments,
-    attendance: seedAttendance,
-    transactions: seedTransactions,
-    expenses: seedExpenses,
-  };
+const EMPTY_STATE: DataState = {
+  students: [],
+  courses: [],
+  enrollments: [],
+  attendance: [],
+  transactions: [],
+  expenses: [],
+};
+
+async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(url, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body?.error ?? `เกิดข้อผิดพลาด (HTTP ${res.status})`);
+  }
+  return body as T;
 }
 
-interface StoreContextValue {
-  students: Student[];
-  courses: Course[];
-  enrollments: Enrollment[];
-  attendance: AttendanceRecord[];
-  transactions: Transaction[];
-  expenses: Expense[];
+function reportError(action: string, err: unknown) {
+  const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาดไม่ทราบสาเหตุ";
+  console.error(action, err);
+  if (typeof window !== "undefined") window.alert(message);
+}
+
+interface StoreContextValue extends DataState {
+  loading: boolean;
+  loadError: string | null;
+  refresh: () => Promise<void>;
 
   // selectors
   getStudent: (id: string) => Student | undefined;
@@ -70,7 +74,7 @@ interface StoreContextValue {
   getEnrollmentsForCourse: (courseId: string) => Enrollment[];
   getEnrollmentsForStudent: (studentId: string) => Enrollment[];
 
-  // mutations
+  // mutations — all persist to Supabase via app/api/** before updating state
   addTransaction: (input: {
     studentId: string;
     courseId: string;
@@ -78,47 +82,7 @@ interface StoreContextValue {
     method: PaymentMethod;
     slipImage?: string;
     note?: string;
-  }) => void;
-  addExpense: (input: {
-    title: string;
-    amount: number;
-    category: ExpenseCategory;
-    method: PaymentMethod;
-    receiptImage?: string;
-  }) => void;
-  markAttendance: (enrollmentId: string, status: AttendanceStatus) => void;
-  updateEnrollmentHours: (enrollmentId: string, monthlyHours: number) => void;
-  updateEnrollmentFee: (enrollmentId: string, monthlyFee: number) => void;
-  updateCoursePrice: (
-    courseId: string,
-    patch: { hourlyRate?: number; defaultMonthlyHours?: number; monthlyFee?: number }
-  ) => void;
-  addStudent: (input: {
-    name: string;
-    grade: string;
-    parentName: string;
-    parentLine: string;
-    parentFacebook: string;
-    phone?: string;
-  }) => string;
-  addCourse: (input: {
-    name: string;
-    subject: string;
-    type: Course["type"];
-    hourlyRate?: number;
-    defaultMonthlyHours?: number;
-    monthlyFee?: number;
-  }) => string;
-  addEnrollment: (input: {
-    studentId: string;
-    courseId: string;
-    monthlyHours?: number;
-    monthlyFee?: number;
-    sessionHours?: number;
-  }) => void;
-  deleteStudent: (studentId: string) => void;
-  deleteCourse: (courseId: string) => void;
-  markAllPresent: (courseId: string) => void;
+  }) => Promise<boolean>;
   updateTransaction: (
     id: string,
     patch: Partial<{
@@ -129,8 +93,16 @@ interface StoreContextValue {
       slipImage?: string;
       note?: string;
     }>
-  ) => void;
-  deleteTransaction: (id: string) => void;
+  ) => Promise<boolean>;
+  deleteTransaction: (id: string) => Promise<boolean>;
+
+  addExpense: (input: {
+    title: string;
+    amount: number;
+    category: ExpenseCategory;
+    method: PaymentMethod;
+    receiptImage?: string;
+  }) => Promise<boolean>;
   updateExpense: (
     id: string,
     patch: Partial<{
@@ -140,39 +112,69 @@ interface StoreContextValue {
       method: PaymentMethod;
       receiptImage?: string;
     }>
-  ) => void;
-  deleteExpense: (id: string) => void;
+  ) => Promise<boolean>;
+  deleteExpense: (id: string) => Promise<boolean>;
+
+  markAttendance: (enrollmentId: string, status: AttendanceStatus) => Promise<boolean>;
+  markAllPresent: (courseId: string) => Promise<boolean>;
+
+  updateEnrollmentHours: (enrollmentId: string, monthlyHours: number) => Promise<boolean>;
+  updateEnrollmentFee: (enrollmentId: string, monthlyFee: number) => Promise<boolean>;
+  updateCoursePrice: (
+    courseId: string,
+    patch: { hourlyRate?: number; defaultMonthlyHours?: number; monthlyFee?: number }
+  ) => Promise<boolean>;
+
+  addStudent: (input: {
+    name: string;
+    grade: string;
+    parentName: string;
+    parentLine: string;
+    parentFacebook: string;
+    phone?: string;
+  }) => Promise<string | null>;
+  addCourse: (input: {
+    name: string;
+    subject: string;
+    type: Course["type"];
+    hourlyRate?: number;
+    defaultMonthlyHours?: number;
+    monthlyFee?: number;
+  }) => Promise<string | null>;
+  addEnrollment: (input: {
+    studentId: string;
+    courseId: string;
+    monthlyHours?: number;
+    monthlyFee?: number;
+    sessionHours?: number;
+  }) => Promise<boolean>;
+  deleteStudent: (studentId: string) => Promise<boolean>;
+  deleteCourse: (courseId: string) => Promise<boolean>;
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  // Always start from deterministic seed data so server-rendered HTML and the
-  // client's first render match exactly (avoids hydration mismatches).
-  const [state, setState] = useState<PersistedState>(seedState);
-  const [hydrated, setHydrated] = useState(false);
+  const [state, setState] = useState<DataState>(EMPTY_STATE);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // After mount, pull any previously saved data from localStorage. This only
-  // runs in the browser, so it can never disagree with the server render.
-  useEffect(() => {
+  async function refresh() {
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setState(JSON.parse(raw) as PersistedState);
-    } catch {
-      // ignore corrupt storage, keep seed data
+      const data = await apiFetch<DataState>("/api/data");
+      setState(data);
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
     } finally {
-      setHydrated(true);
+      setLoading(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    if (!hydrated) return; // avoid overwriting saved data with seed data pre-load
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // storage full/unavailable — non-fatal for a demo app
-    }
-  }, [state, hydrated]);
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getStudent = (id: string) => state.students.find((s) => s.id === id);
   const getCourse = (id: string) => state.courses.find((c) => c.id === id);
@@ -181,7 +183,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const getEnrollmentsForStudent = (studentId: string) =>
     state.enrollments.filter((e) => e.studentId === studentId);
 
-  function addTransaction(input: {
+  async function addTransaction(input: {
     studentId: string;
     courseId: string;
     amount: number;
@@ -189,163 +191,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     slipImage?: string;
     note?: string;
   }) {
-    const tx: Transaction = {
-      id: uid("tx"),
-      createdAt: new Date().toISOString(),
-      ...input,
-    };
-    setState((prev) => ({ ...prev, transactions: [tx, ...prev.transactions] }));
+    try {
+      const tx = await apiFetch<Transaction>("/api/transactions", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      setState((prev) => ({ ...prev, transactions: [tx, ...prev.transactions] }));
+      return true;
+    } catch (err) {
+      reportError("addTransaction", err);
+      return false;
+    }
   }
 
-  function addExpense(input: {
-    title: string;
-    amount: number;
-    category: ExpenseCategory;
-    method: PaymentMethod;
-    receiptImage?: string;
-  }) {
-    const ex: Expense = {
-      id: uid("ex"),
-      createdAt: new Date().toISOString(),
-      ...input,
-    };
-    setState((prev) => ({ ...prev, expenses: [ex, ...prev.expenses] }));
-  }
-
-  function markAttendance(enrollmentId: string, status: AttendanceStatus) {
-    setState((prev) => {
-      const enrollment = prev.enrollments.find((e) => e.id === enrollmentId);
-      if (!enrollment) return prev;
-
-      const hoursCounted = status === "present" ? enrollment.sessionHours : 0;
-      const record: AttendanceRecord = {
-        id: uid("at"),
-        enrollmentId,
-        date: new Date().toISOString().slice(0, 10),
-        status,
-        hoursCounted,
-      };
-
-      // Hours-for-billing are derived from this dated attendance log (see
-      // getHoursUsedThisMonth in lib/analytics.ts), not from a running
-      // counter on the enrollment — that's what makes the monthly quota
-      // reset automatically with no extra bookkeeping.
-      return {
-        ...prev,
-        attendance: [record, ...prev.attendance],
-      };
-    });
-  }
-
-  function updateEnrollmentHours(enrollmentId: string, monthlyHours: number) {
-    setState((prev) => ({
-      ...prev,
-      enrollments: prev.enrollments.map((e) =>
-        e.id === enrollmentId ? { ...e, monthlyHours } : e
-      ),
-    }));
-  }
-
-  function updateEnrollmentFee(enrollmentId: string, monthlyFee: number) {
-    setState((prev) => ({
-      ...prev,
-      enrollments: prev.enrollments.map((e) =>
-        e.id === enrollmentId ? { ...e, monthlyFee } : e
-      ),
-    }));
-  }
-
-  function updateCoursePrice(
-    courseId: string,
-    patch: { hourlyRate?: number; defaultMonthlyHours?: number; monthlyFee?: number }
-  ) {
-    setState((prev) => ({
-      ...prev,
-      courses: prev.courses.map((c) => (c.id === courseId ? { ...c, ...patch } : c)),
-    }));
-  }
-
-  function addStudent(input: {
-    name: string;
-    grade: string;
-    parentName: string;
-    parentLine: string;
-    parentFacebook: string;
-    phone?: string;
-  }) {
-    const id = uid("st");
-    const student: Student = { id, ...input };
-    setState((prev) => ({ ...prev, students: [...prev.students, student] }));
-    return id;
-  }
-
-  function addCourse(input: {
-    name: string;
-    subject: string;
-    type: Course["type"];
-    hourlyRate?: number;
-    defaultMonthlyHours?: number;
-    monthlyFee?: number;
-  }) {
-    const id = uid("co");
-    const course: Course = { id, ...input };
-    setState((prev) => ({ ...prev, courses: [...prev.courses, course] }));
-    return id;
-  }
-
-  function addEnrollment(input: {
-    studentId: string;
-    courseId: string;
-    monthlyHours?: number;
-    monthlyFee?: number;
-    sessionHours?: number;
-  }) {
-    const enrollment: Enrollment = {
-      id: uid("en"),
-      studentId: input.studentId,
-      courseId: input.courseId,
-      monthlyHours: input.monthlyHours,
-      monthlyFee: input.monthlyFee,
-      hoursUsed: 0,
-      sessionHours: input.sessionHours ?? 1.5,
-    };
-    setState((prev) => ({ ...prev, enrollments: [...prev.enrollments, enrollment] }));
-  }
-
-  function deleteStudent(studentId: string) {
-    setState((prev) => ({
-      ...prev,
-      students: prev.students.filter((s) => s.id !== studentId),
-      enrollments: prev.enrollments.filter((e) => e.studentId !== studentId),
-    }));
-  }
-
-  function deleteCourse(courseId: string) {
-    setState((prev) => ({
-      ...prev,
-      courses: prev.courses.filter((c) => c.id !== courseId),
-      enrollments: prev.enrollments.filter((e) => e.courseId !== courseId),
-    }));
-  }
-
-  function markAllPresent(courseId: string) {
-    setState((prev) => {
-      const today = new Date().toISOString().slice(0, 10);
-      const targetEnrollments = prev.enrollments.filter((e) => e.courseId === courseId);
-
-      const newRecords: AttendanceRecord[] = targetEnrollments.map((e) => ({
-        id: uid("at"),
-        enrollmentId: e.id,
-        date: today,
-        status: "present",
-        hoursCounted: e.sessionHours,
-      }));
-
-      return { ...prev, attendance: [...newRecords, ...prev.attendance] };
-    });
-  }
-
-  function updateTransaction(
+  async function updateTransaction(
     id: string,
     patch: Partial<{
       studentId: string;
@@ -356,20 +215,57 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       note?: string;
     }>
   ) {
-    setState((prev) => ({
-      ...prev,
-      transactions: prev.transactions.map((t) => (t.id === id ? { ...t, ...patch } : t)),
-    }));
+    try {
+      const tx = await apiFetch<Transaction>(`/api/transactions/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch),
+      });
+      setState((prev) => ({
+        ...prev,
+        transactions: prev.transactions.map((t) => (t.id === id ? tx : t)),
+      }));
+      return true;
+    } catch (err) {
+      reportError("updateTransaction", err);
+      return false;
+    }
   }
 
-  function deleteTransaction(id: string) {
-    setState((prev) => ({
-      ...prev,
-      transactions: prev.transactions.filter((t) => t.id !== id),
-    }));
+  async function deleteTransaction(id: string) {
+    try {
+      await apiFetch(`/api/transactions/${id}`, { method: "DELETE" });
+      setState((prev) => ({
+        ...prev,
+        transactions: prev.transactions.filter((t) => t.id !== id),
+      }));
+      return true;
+    } catch (err) {
+      reportError("deleteTransaction", err);
+      return false;
+    }
   }
 
-  function updateExpense(
+  async function addExpense(input: {
+    title: string;
+    amount: number;
+    category: ExpenseCategory;
+    method: PaymentMethod;
+    receiptImage?: string;
+  }) {
+    try {
+      const ex = await apiFetch<Expense>("/api/expenses", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      setState((prev) => ({ ...prev, expenses: [ex, ...prev.expenses] }));
+      return true;
+    } catch (err) {
+      reportError("addExpense", err);
+      return false;
+    }
+  }
+
+  async function updateExpense(
     id: string,
     patch: Partial<{
       title: string;
@@ -379,29 +275,244 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       receiptImage?: string;
     }>
   ) {
-    setState((prev) => ({
-      ...prev,
-      expenses: prev.expenses.map((e) => (e.id === id ? { ...e, ...patch } : e)),
-    }));
+    try {
+      const ex = await apiFetch<Expense>(`/api/expenses/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch),
+      });
+      setState((prev) => ({
+        ...prev,
+        expenses: prev.expenses.map((e) => (e.id === id ? ex : e)),
+      }));
+      return true;
+    } catch (err) {
+      reportError("updateExpense", err);
+      return false;
+    }
   }
 
-  function deleteExpense(id: string) {
-    setState((prev) => ({
-      ...prev,
-      expenses: prev.expenses.filter((e) => e.id !== id),
+  async function deleteExpense(id: string) {
+    try {
+      await apiFetch(`/api/expenses/${id}`, { method: "DELETE" });
+      setState((prev) => ({ ...prev, expenses: prev.expenses.filter((e) => e.id !== id) }));
+      return true;
+    } catch (err) {
+      reportError("deleteExpense", err);
+      return false;
+    }
+  }
+
+  async function markAttendance(enrollmentId: string, status: AttendanceStatus) {
+    const enrollment = state.enrollments.find((e) => e.id === enrollmentId);
+    if (!enrollment) return false;
+
+    const hoursCounted = status === "present" ? enrollment.sessionHours : 0;
+    const today = new Date().toISOString().slice(0, 10);
+
+    try {
+      const records = await apiFetch<AttendanceRecord[]>("/api/attendance", {
+        method: "POST",
+        body: JSON.stringify({
+          records: [{ enrollmentId, date: today, status, hoursCounted }],
+        }),
+      });
+      setState((prev) => ({ ...prev, attendance: [...records, ...prev.attendance] }));
+      return true;
+    } catch (err) {
+      reportError("markAttendance", err);
+      return false;
+    }
+  }
+
+  async function markAllPresent(courseId: string) {
+    const targetEnrollments = state.enrollments.filter((e) => e.courseId === courseId);
+    if (targetEnrollments.length === 0) return false;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const records = targetEnrollments.map((e) => ({
+      enrollmentId: e.id,
+      date: today,
+      status: "present" as const,
+      hoursCounted: e.sessionHours,
     }));
+
+    try {
+      const inserted = await apiFetch<AttendanceRecord[]>("/api/attendance", {
+        method: "POST",
+        body: JSON.stringify({ records }),
+      });
+      setState((prev) => ({ ...prev, attendance: [...inserted, ...prev.attendance] }));
+      return true;
+    } catch (err) {
+      reportError("markAllPresent", err);
+      return false;
+    }
+  }
+
+  async function updateEnrollmentHours(enrollmentId: string, monthlyHours: number) {
+    try {
+      const updated = await apiFetch<Enrollment>(`/api/enrollments/${enrollmentId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ monthlyHours }),
+      });
+      setState((prev) => ({
+        ...prev,
+        enrollments: prev.enrollments.map((e) => (e.id === enrollmentId ? updated : e)),
+      }));
+      return true;
+    } catch (err) {
+      reportError("updateEnrollmentHours", err);
+      return false;
+    }
+  }
+
+  async function updateEnrollmentFee(enrollmentId: string, monthlyFee: number) {
+    try {
+      const updated = await apiFetch<Enrollment>(`/api/enrollments/${enrollmentId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ monthlyFee }),
+      });
+      setState((prev) => ({
+        ...prev,
+        enrollments: prev.enrollments.map((e) => (e.id === enrollmentId ? updated : e)),
+      }));
+      return true;
+    } catch (err) {
+      reportError("updateEnrollmentFee", err);
+      return false;
+    }
+  }
+
+  async function updateCoursePrice(
+    courseId: string,
+    patch: { hourlyRate?: number; defaultMonthlyHours?: number; monthlyFee?: number }
+  ) {
+    try {
+      const updated = await apiFetch<Course>(`/api/courses/${courseId}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch),
+      });
+      setState((prev) => ({
+        ...prev,
+        courses: prev.courses.map((c) => (c.id === courseId ? updated : c)),
+      }));
+      return true;
+    } catch (err) {
+      reportError("updateCoursePrice", err);
+      return false;
+    }
+  }
+
+  async function addStudent(input: {
+    name: string;
+    grade: string;
+    parentName: string;
+    parentLine: string;
+    parentFacebook: string;
+    phone?: string;
+  }) {
+    try {
+      const student = await apiFetch<Student>("/api/students", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      setState((prev) => ({ ...prev, students: [...prev.students, student] }));
+      return student.id;
+    } catch (err) {
+      reportError("addStudent", err);
+      return null;
+    }
+  }
+
+  async function addCourse(input: {
+    name: string;
+    subject: string;
+    type: Course["type"];
+    hourlyRate?: number;
+    defaultMonthlyHours?: number;
+    monthlyFee?: number;
+  }) {
+    try {
+      const course = await apiFetch<Course>("/api/courses", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      setState((prev) => ({ ...prev, courses: [...prev.courses, course] }));
+      return course.id;
+    } catch (err) {
+      reportError("addCourse", err);
+      return null;
+    }
+  }
+
+  async function addEnrollment(input: {
+    studentId: string;
+    courseId: string;
+    monthlyHours?: number;
+    monthlyFee?: number;
+    sessionHours?: number;
+  }) {
+    try {
+      const enrollment = await apiFetch<Enrollment>("/api/enrollments", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      setState((prev) => ({ ...prev, enrollments: [...prev.enrollments, enrollment] }));
+      return true;
+    } catch (err) {
+      reportError("addEnrollment", err);
+      return false;
+    }
+  }
+
+  async function deleteStudent(studentId: string) {
+    try {
+      await apiFetch(`/api/students/${studentId}`, { method: "DELETE" });
+      setState((prev) => ({
+        ...prev,
+        students: prev.students.filter((s) => s.id !== studentId),
+        enrollments: prev.enrollments.filter((e) => e.studentId !== studentId),
+      }));
+      return true;
+    } catch (err) {
+      reportError("deleteStudent", err);
+      return false;
+    }
+  }
+
+  async function deleteCourse(courseId: string) {
+    try {
+      await apiFetch(`/api/courses/${courseId}`, { method: "DELETE" });
+      setState((prev) => ({
+        ...prev,
+        courses: prev.courses.filter((c) => c.id !== courseId),
+        enrollments: prev.enrollments.filter((e) => e.courseId !== courseId),
+      }));
+      return true;
+    } catch (err) {
+      reportError("deleteCourse", err);
+      return false;
+    }
   }
 
   const value = useMemo<StoreContextValue>(
     () => ({
       ...state,
+      loading,
+      loadError,
+      refresh,
       getStudent,
       getCourse,
       getEnrollmentsForCourse,
       getEnrollmentsForStudent,
       addTransaction,
+      updateTransaction,
+      deleteTransaction,
       addExpense,
+      updateExpense,
+      deleteExpense,
       markAttendance,
+      markAllPresent,
       updateEnrollmentHours,
       updateEnrollmentFee,
       updateCoursePrice,
@@ -410,14 +521,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addEnrollment,
       deleteStudent,
       deleteCourse,
-      markAllPresent,
-      updateTransaction,
-      deleteTransaction,
-      updateExpense,
-      deleteExpense,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state]
+    [state, loading, loadError]
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

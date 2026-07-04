@@ -43,15 +43,23 @@ export function ExpenseForm() {
     setReceiptImage(undefined);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  const [submitting, setSubmitting] = React.useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const numericAmount = Number(amount);
-    if (!title || !numericAmount || numericAmount <= 0) return;
+    if (!title || !numericAmount || numericAmount <= 0 || submitting) return;
 
-    addExpense({ title, amount: numericAmount, category, method, receiptImage });
-    resetForm();
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 2500);
+    setSubmitting(true);
+    try {
+      const ok = await addExpense({ title, amount: numericAmount, category, method, receiptImage });
+      if (!ok) return;
+      resetForm();
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2500);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -134,8 +142,8 @@ export function ExpenseForm() {
       />
 
       <div className="flex items-center gap-3 pt-1">
-        <Button type="submit" size="lg" className="flex-1 sm:flex-none">
-          บันทึกรายจ่าย
+        <Button type="submit" size="lg" className="flex-1 sm:flex-none" disabled={submitting}>
+          {submitting ? "กำลังบันทึก..." : "บันทึกรายจ่าย"}
         </Button>
         {success && (
           <span className="flex items-center gap-1.5 text-sm font-medium text-success">

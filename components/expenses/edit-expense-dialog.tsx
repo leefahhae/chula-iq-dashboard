@@ -54,17 +54,23 @@ export function EditExpenseDialog({ expense }: { expense: Expense }) {
     }
   }, [open, expense]);
 
-  function handleSave() {
+  async function handleSave() {
     const numericAmount = Number(amount);
     if (!title || !numericAmount || numericAmount <= 0) return;
-    updateExpense(expense.id, { title, amount: numericAmount, category, method, receiptImage });
-    setOpen(false);
+    const ok = await updateExpense(expense.id, {
+      title,
+      amount: numericAmount,
+      category,
+      method,
+      receiptImage,
+    });
+    if (ok) setOpen(false);
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (window.confirm("ลบรายการรายจ่ายนี้ใช่ไหม? ลบแล้วกู้คืนไม่ได้")) {
-      deleteExpense(expense.id);
-      setOpen(false);
+      const ok = await deleteExpense(expense.id);
+      if (ok) setOpen(false);
     }
   }
 

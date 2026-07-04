@@ -29,22 +29,30 @@ export function AddCourseForm() {
     setMonthlyFee("1000");
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  const [submitting, setSubmitting] = React.useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name || !subject) return;
+    if (!name || !subject || submitting) return;
 
-    addCourse({
-      name,
-      subject,
-      type,
-      hourlyRate: type === "private" ? Number(hourlyRate) || 0 : undefined,
-      defaultMonthlyHours: type === "private" ? Number(defaultMonthlyHours) || 0 : undefined,
-      monthlyFee: type === "group" ? Number(monthlyFee) || 0 : undefined,
-    });
+    setSubmitting(true);
+    try {
+      const courseId = await addCourse({
+        name,
+        subject,
+        type,
+        hourlyRate: type === "private" ? Number(hourlyRate) || 0 : undefined,
+        defaultMonthlyHours: type === "private" ? Number(defaultMonthlyHours) || 0 : undefined,
+        monthlyFee: type === "group" ? Number(monthlyFee) || 0 : undefined,
+      });
+      if (!courseId) return;
 
-    resetForm();
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 2500);
+      resetForm();
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2500);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -121,8 +129,8 @@ export function AddCourseForm() {
       )}
 
       <div className="flex items-center gap-3 pt-1">
-        <Button type="submit">
-          <GraduationCap className="h-4 w-4" /> เพิ่มคอร์ส
+        <Button type="submit" disabled={submitting}>
+          <GraduationCap className="h-4 w-4" /> {submitting ? "กำลังบันทึก..." : "เพิ่มคอร์ส"}
         </Button>
         {success && (
           <span className="flex items-center gap-1.5 text-sm font-medium text-success">

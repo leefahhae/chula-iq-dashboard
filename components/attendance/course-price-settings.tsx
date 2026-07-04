@@ -24,15 +24,15 @@ export function CoursePriceSettings({ course }: { course: Course }) {
     setMonthlyFee(String(course.monthlyFee ?? ""));
   }, [course.id, course.hourlyRate, course.defaultMonthlyHours, course.monthlyFee]);
 
-  function save() {
-    if (course.type === "private") {
-      updateCoursePrice(course.id, {
-        hourlyRate: Number(hourlyRate) || 0,
-        defaultMonthlyHours: Number(defaultHours) || 0,
-      });
-    } else {
-      updateCoursePrice(course.id, { monthlyFee: Number(monthlyFee) || 0 });
-    }
+  async function save() {
+    const ok =
+      course.type === "private"
+        ? await updateCoursePrice(course.id, {
+            hourlyRate: Number(hourlyRate) || 0,
+            defaultMonthlyHours: Number(defaultHours) || 0,
+          })
+        : await updateCoursePrice(course.id, { monthlyFee: Number(monthlyFee) || 0 });
+    if (!ok) return;
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
   }

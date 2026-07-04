@@ -37,11 +37,11 @@ export function StudentAttendanceTable({ course }: { course: Course }) {
     setEditValue(String(currentValue));
   }
 
-  function saveEdit(enrollmentId: string) {
+  async function saveEdit(enrollmentId: string) {
     const val = Number(editValue) || 0;
-    if (course.type === "private") updateEnrollmentHours(enrollmentId, val);
-    else updateEnrollmentFee(enrollmentId, val);
     setEditingId(null);
+    if (course.type === "private") await updateEnrollmentHours(enrollmentId, val);
+    else await updateEnrollmentFee(enrollmentId, val);
   }
 
   return (

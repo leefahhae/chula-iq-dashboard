@@ -62,23 +62,31 @@ export default function PaymentEntryPage() {
     setNote("");
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  const [submitting, setSubmitting] = React.useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const numericAmount = Number(amount);
-    if (!studentId || !courseId || !numericAmount || numericAmount <= 0) return;
+    if (!studentId || !courseId || !numericAmount || numericAmount <= 0 || submitting) return;
 
-    addTransaction({
-      studentId,
-      courseId,
-      amount: numericAmount,
-      method,
-      slipImage: method === "transfer" ? slipImage : undefined,
-      note: note || undefined,
-    });
+    setSubmitting(true);
+    try {
+      const ok = await addTransaction({
+        studentId,
+        courseId,
+        amount: numericAmount,
+        method,
+        slipImage: method === "transfer" ? slipImage : undefined,
+        note: note || undefined,
+      });
+      if (!ok) return;
 
-    resetForm();
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 2500);
+      resetForm();
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2500);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -209,8 +217,8 @@ export default function PaymentEntryPage() {
               </div>
 
               <div className="flex items-center gap-3 pt-1">
-                <Button type="submit" size="lg" className="flex-1 sm:flex-none">
-                  บันทึกการรับเงิน
+                <Button type="submit" size="lg" className="flex-1 sm:flex-none" disabled={submitting}>
+                  {submitting ? "กำลังบันทึก..." : "บันทึกการรับเงิน"}
                 </Button>
                 {success && (
                   <span className="flex items-center gap-1.5 text-sm font-medium text-success">

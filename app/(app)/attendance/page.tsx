@@ -16,14 +16,14 @@ export default function AttendancePage() {
   const selectedCourse = courses.find((c) => c.id === courseId);
   const courseEnrollmentCount = enrollments.filter((e) => e.courseId === courseId).length;
 
-  function handleMarkAllPresent() {
+  async function handleMarkAllPresent() {
     if (!selectedCourse) return;
     if (
       window.confirm(
         `เช็คชื่อ "มาเรียน" ให้นักเรียนทุกคนในคอร์ส "${selectedCourse.name}" (${courseEnrollmentCount} คน) ใช่ไหม?`
       )
     ) {
-      markAllPresent(selectedCourse.id);
+      await markAllPresent(selectedCourse.id);
     }
   }
 
