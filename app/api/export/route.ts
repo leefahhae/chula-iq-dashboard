@@ -73,7 +73,10 @@ export async function GET() {
     const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
     const filename = `chula-iq-report-${new Date().toISOString().slice(0, 10)}.xlsx`;
 
-    return new NextResponse(buffer, {
+    // NextResponse's BodyInit type doesn't cleanly accept Node's Buffer type
+    // directly (TS union-matching quirk) — wrapping in a plain Uint8Array
+    // (same bytes, no Buffer-specific generic) satisfies it.
+    return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
