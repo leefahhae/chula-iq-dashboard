@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useStore } from "@/lib/store";
 import { formatBaht } from "@/lib/utils";
+import { getHoursUsedThisMonth } from "@/lib/analytics";
 import { CheckCircle2, XCircle, CalendarClock, Pencil } from "lucide-react";
 import type { Course } from "@/lib/types";
 
@@ -63,7 +64,7 @@ export function StudentAttendanceTable({ course }: { course: Course }) {
 
             if (course.type === "private") {
               const quota = enrollment.monthlyHours ?? course.defaultMonthlyHours ?? 0;
-              const used = enrollment.hoursUsed;
+              const used = getHoursUsedThisMonth(enrollment.id, attendance);
               const pct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
               const amountDue = Math.round(used * (course.hourlyRate ?? 0));
 
@@ -75,7 +76,13 @@ export function StudentAttendanceTable({ course }: { course: Course }) {
                   </TableCell>
                   <TableCell className="min-w-[180px]">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">
+                      <span
+                        className={
+                          quota > 0 && used > quota
+                            ? "text-sm font-medium text-warning"
+                            : "text-sm font-medium"
+                        }
+                      >
                         {used}/
                         {isEditing ? (
                           <input

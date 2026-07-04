@@ -34,8 +34,11 @@ export interface Course {
 }
 
 /**
- * An Enrollment links a Student to a Course for the *current* billing month.
- * - Private: tracks hoursUsed against monthlyHours (quota), editable per student.
+ * An Enrollment links a Student to a Course.
+ * - Private: billed by hours attended, checked against monthlyHours (quota),
+ *   editable per student. Hours-used-this-month is *derived* from the dated
+ *   attendance log (see getHoursUsedThisMonth in lib/analytics.ts) rather
+ *   than stored here, so it rolls over to a new month automatically.
  * - Group: tracks attendance stats only; monthlyFee editable per enrollment
  *   (so a "ปิดเทอม" intensive course can charge more for the same subject).
  */
@@ -45,7 +48,8 @@ export interface Enrollment {
   courseId: string;
   monthlyHours?: number; // override quota for private classes
   monthlyFee?: number; // override flat fee for group classes
-  hoursUsed: number; // accumulated hours this billing month (private)
+  /** @deprecated unused for billing/display — hours are derived from the attendance log instead. Kept only so older seed/persisted records still type-check. */
+  hoursUsed: number;
   sessionHours: number; // hours counted per "present" tick (private), e.g. 1.5
 }
 

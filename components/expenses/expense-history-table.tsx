@@ -16,6 +16,7 @@ import { useStore } from "@/lib/store";
 import { formatBaht, formatDateOnly } from "@/lib/utils";
 import { EXPENSE_CATEGORY_LABEL } from "@/lib/types";
 import { ImageIcon, Banknote, Landmark } from "lucide-react";
+import { EditExpenseDialog } from "@/components/expenses/edit-expense-dialog";
 
 export function ExpenseHistoryTable() {
   const { expenses } = useStore();
@@ -33,6 +34,7 @@ export function ExpenseHistoryTable() {
               <TableHead>ช่องทาง</TableHead>
               <TableHead className="text-right">จำนวนเงิน</TableHead>
               <TableHead className="text-right">หลักฐาน</TableHead>
+              <TableHead className="text-right">แก้ไข</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -70,11 +72,14 @@ export function ExpenseHistoryTable() {
                     <span className="text-xs text-muted-foreground">—</span>
                   )}
                 </TableCell>
+                <TableCell className="text-right">
+                  <EditExpenseDialog expense={ex} />
+                </TableCell>
               </TableRow>
             ))}
             {expenses.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                   ยังไม่มีรายการรายจ่าย
                 </TableCell>
               </TableRow>

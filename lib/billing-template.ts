@@ -1,6 +1,6 @@
-import type { Course, Enrollment, Student, Transaction } from "./types";
+import type { Course, Enrollment, Student, Transaction, AttendanceRecord } from "./types";
 import { formatBaht } from "./utils";
-import { getEnrollmentBalance } from "./analytics";
+import { getEnrollmentBalance, getHoursUsedThisMonth } from "./analytics";
 
 export interface BillingLineItem {
   course: Course;
@@ -19,6 +19,7 @@ export function generateBillingMessage(
   student: Student,
   items: BillingLineItem[],
   transactions: Transaction[] = [],
+  attendance: AttendanceRecord[] = [],
   instituteName = "Chula IQ"
 ): string {
   const today = new Intl.DateTimeFormat("th-TH", {
@@ -37,12 +38,12 @@ export function generateBillingMessage(
 
   items.forEach((item, idx) => {
     const { course, enrollment } = item;
-    const { due, paid, balance } = getEnrollmentBalance(enrollment, course, transactions);
+    const { due, paid, balance } = getEnrollmentBalance(enrollment, course, transactions, attendance);
     totalBalance += balance;
 
     if (course.type === "private") {
       const quota = enrollment.monthlyHours ?? course.defaultMonthlyHours ?? 0;
-      const used = enrollment.hoursUsed;
+      const used = getHoursUsedThisMonth(enrollment.id, attendance);
       const rate = course.hourlyRate ?? 0;
       lines.push(`${idx + 1}) วิชา${course.subject} (คลาสเดี่ยว)`);
       lines.push(`    เรียนไปแล้ว ${used}/${quota} ชม. × ${formatBaht(rate)}/ชม.`);

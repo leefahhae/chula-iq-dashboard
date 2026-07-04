@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useStore } from "@/lib/store";
 import { formatBaht, formatDateThai } from "@/lib/utils";
 import { History, Banknote, Landmark } from "lucide-react";
+import { EditTransactionDialog } from "@/components/payment/edit-transaction-dialog";
 
 export function RecentEntries() {
   const { transactions, getStudent, getCourse } = useStore();
@@ -37,7 +38,10 @@ export function RecentEntries() {
                 <p className="mt-1 text-[11px] text-muted-foreground">{formatDateThai(tx.createdAt)}</p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1.5">
-                <span className="text-sm font-bold text-primary-700">{formatBaht(tx.amount)}</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-bold text-primary-700">{formatBaht(tx.amount)}</span>
+                  <EditTransactionDialog transaction={tx} />
+                </div>
                 <Badge variant={tx.method === "cash" ? "warning" : "success"} className="text-[10px]">
                   {tx.method === "cash" ? (
                     <>

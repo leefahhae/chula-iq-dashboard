@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Sarabun } from "next/font/google";
 import "./globals.css";
-import { StoreProvider } from "@/lib/store";
-import { AppShell } from "@/components/layout/app-shell";
 
 // Sarabun is Google Fonts' web-native successor to the Thai government
 // "TH SarabunPSK" standard typeface (same foundry, revised for web use),
@@ -20,14 +18,14 @@ export const metadata: Metadata = {
   description: "ระบบหลังบ้านสถาบันกวดวิชา Chula IQ — บันทึกรับเงิน เช็คชื่อ แจ้งยอด และสรุปการเงิน",
 };
 
+// This root layout stays deliberately minimal (just fonts/HTML shell) so
+// that /login can render without the authenticated app's sidebar/nav around
+// it. The sidebar, nav, and data StoreProvider only wrap the actual app
+// pages — see app/(app)/layout.tsx.
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="th" className={sarabun.variable}>
-      <body className="font-sans antialiased">
-        <StoreProvider>
-          <AppShell>{children}</AppShell>
-        </StoreProvider>
-      </body>
+      <body className="font-sans antialiased">{children}</body>
     </html>
   );
 }

@@ -11,8 +11,30 @@ import {
   Receipt,
   GraduationCap,
   Users,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+function LogoutButton({ className }: { className?: string }) {
+  async function handleLogout() {
+    await fetch("/api/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleLogout}
+      className={cn(
+        "flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium text-foreground/60 transition-colors hover:bg-destructive/10 hover:text-destructive",
+        className
+      )}
+    >
+      <LogOut className="h-4 w-4" />
+      ออกจากระบบ
+    </button>
+  );
+}
 
 const NAV_ITEMS = [
   { href: "/", label: "ภาพรวม", shortLabel: "ภาพรวม", icon: LayoutDashboard },
@@ -62,20 +84,24 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="m-3 rounded-2xl bg-primary-50 p-4 text-xs text-primary-800">
+        <div className="mx-3 mb-2 rounded-2xl bg-primary-50 p-4 text-xs text-primary-800">
           💡 ระบบนี้เก็บข้อมูลไว้ในเบราว์เซอร์เพื่อทดลองใช้งาน พร้อมต่อฐานข้อมูลจริงได้ทันที
         </div>
+        <LogoutButton className="mx-3 mb-3" />
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center gap-2.5 border-b border-border bg-white/80 px-4 py-3 backdrop-blur-md md:hidden">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white">
-          <GraduationCap className="h-4 w-4" />
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-2.5 border-b border-border bg-white/80 px-4 py-3 backdrop-blur-md md:hidden">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white">
+            <GraduationCap className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-sm font-bold leading-tight text-primary-700">Chula IQ</p>
+            <p className="text-[11px] text-muted-foreground">Tutor Admin Dashboard</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-bold leading-tight text-primary-700">Chula IQ</p>
-          <p className="text-[11px] text-muted-foreground">Tutor Admin Dashboard</p>
-        </div>
+        <LogoutButton className="px-2 text-xs" />
       </header>
 
       {/* Main content */}

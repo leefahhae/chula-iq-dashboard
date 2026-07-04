@@ -16,6 +16,7 @@ import { useStore } from "@/lib/store";
 import { formatBaht, formatDateThai } from "@/lib/utils";
 import type { Transaction } from "@/lib/types";
 import { ImageIcon, Banknote, Landmark } from "lucide-react";
+import { EditTransactionDialog } from "@/components/payment/edit-transaction-dialog";
 
 export function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
   const { getStudent, getCourse } = useStore();
@@ -33,6 +34,7 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
               <TableHead>ช่องทาง</TableHead>
               <TableHead className="text-right">จำนวนเงิน</TableHead>
               <TableHead className="text-right">สลิป</TableHead>
+              <TableHead className="text-right">แก้ไข</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -71,12 +73,15 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <EditTransactionDialog transaction={tx} />
+                  </TableCell>
                 </TableRow>
               );
             })}
             {transactions.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                   ยังไม่มีรายการรับเงินวันนี้
                 </TableCell>
               </TableRow>

@@ -23,17 +23,17 @@ interface BillingMessageDialogProps {
 }
 
 export function BillingMessageDialog({ student, items }: BillingMessageDialogProps) {
-  const { transactions } = useStore();
+  const { transactions, attendance } = useStore();
   const [open, setOpen] = React.useState(false);
   const [message, setMessage] = React.useState("");
   const [copied, setCopied] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
-      setMessage(generateBillingMessage(student, items, transactions));
+      setMessage(generateBillingMessage(student, items, transactions, attendance));
       setCopied(false);
     }
-  }, [open, student, items, transactions]);
+  }, [open, student, items, transactions, attendance]);
 
   async function handleCopy() {
     try {

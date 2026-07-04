@@ -119,6 +119,29 @@ interface StoreContextValue {
   deleteStudent: (studentId: string) => void;
   deleteCourse: (courseId: string) => void;
   markAllPresent: (courseId: string) => void;
+  updateTransaction: (
+    id: string,
+    patch: Partial<{
+      studentId: string;
+      courseId: string;
+      amount: number;
+      method: PaymentMethod;
+      slipImage?: string;
+      note?: string;
+    }>
+  ) => void;
+  deleteTransaction: (id: string) => void;
+  updateExpense: (
+    id: string,
+    patch: Partial<{
+      title: string;
+      amount: number;
+      category: ExpenseCategory;
+      method: PaymentMethod;
+      receiptImage?: string;
+    }>
+  ) => void;
+  deleteExpense: (id: string) => void;
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null);
@@ -203,15 +226,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         hoursCounted,
       };
 
-      const enrollments = prev.enrollments.map((e) =>
-        e.id === enrollmentId
-          ? { ...e, hoursUsed: Math.min(e.hoursUsed + hoursCounted, e.monthlyHours ?? Infinity) }
-          : e
-      );
-
+      // Hours-for-billing are derived from this dated attendance log (see
+      // getHoursUsedThisMonth in lib/analytics.ts), not from a running
+      // counter on the enrollment — that's what makes the monthly quota
+      // reset automatically with no extra bookkeeping.
       return {
         ...prev,
-        enrollments,
         attendance: [record, ...prev.attendance],
       };
     });
@@ -321,14 +341,55 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         hoursCounted: e.sessionHours,
       }));
 
-      const enrollments = prev.enrollments.map((e) =>
-        e.courseId === courseId
-          ? { ...e, hoursUsed: Math.min(e.hoursUsed + e.sessionHours, e.monthlyHours ?? Infinity) }
-          : e
-      );
-
-      return { ...prev, enrollments, attendance: [...newRecords, ...prev.attendance] };
+      return { ...prev, attendance: [...newRecords, ...prev.attendance] };
     });
+  }
+
+  function updateTransaction(
+    id: string,
+    patch: Partial<{
+      studentId: string;
+      courseId: string;
+      amount: number;
+      method: PaymentMethod;
+      slipImage?: string;
+      note?: string;
+    }>
+  ) {
+    setState((prev) => ({
+      ...prev,
+      transactions: prev.transactions.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+    }));
+  }
+
+  function deleteTransaction(id: string) {
+    setState((prev) => ({
+      ...prev,
+      transactions: prev.transactions.filter((t) => t.id !== id),
+    }));
+  }
+
+  function updateExpense(
+    id: string,
+    patch: Partial<{
+      title: string;
+      amount: number;
+      category: ExpenseCategory;
+      method: PaymentMethod;
+      receiptImage?: string;
+    }>
+  ) {
+    setState((prev) => ({
+      ...prev,
+      expenses: prev.expenses.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+    }));
+  }
+
+  function deleteExpense(id: string) {
+    setState((prev) => ({
+      ...prev,
+      expenses: prev.expenses.filter((e) => e.id !== id),
+    }));
   }
 
   const value = useMemo<StoreContextValue>(
@@ -350,6 +411,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       deleteStudent,
       deleteCourse,
       markAllPresent,
+      updateTransaction,
+      deleteTransaction,
+      updateExpense,
+      deleteExpense,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [state]
