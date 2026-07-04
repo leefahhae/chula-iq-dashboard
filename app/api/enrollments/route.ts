@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     });
 
     const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase.from("enrollments").insert(row).select().single();
+    const { data, error } = await supabase.from("enrollments").insert(row as any).select().single();
     if (error) throw error;
 
     return NextResponse.json(enrollmentFromDb(data));

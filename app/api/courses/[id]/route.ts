@@ -13,7 +13,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const supabase = getSupabaseServerClient();
     const { data, error } = await supabase
       .from("courses")
-      .update(patch)
+      .update(patch as any)
       .eq("id", params.id)
       .select()
       .single();
