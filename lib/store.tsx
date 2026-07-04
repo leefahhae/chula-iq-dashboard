@@ -116,6 +116,9 @@ interface StoreContextValue {
     monthlyFee?: number;
     sessionHours?: number;
   }) => void;
+  deleteStudent: (studentId: string) => void;
+  deleteCourse: (courseId: string) => void;
+  markAllPresent: (courseId: string) => void;
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null);
@@ -289,6 +292,45 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, enrollments: [...prev.enrollments, enrollment] }));
   }
 
+  function deleteStudent(studentId: string) {
+    setState((prev) => ({
+      ...prev,
+      students: prev.students.filter((s) => s.id !== studentId),
+      enrollments: prev.enrollments.filter((e) => e.studentId !== studentId),
+    }));
+  }
+
+  function deleteCourse(courseId: string) {
+    setState((prev) => ({
+      ...prev,
+      courses: prev.courses.filter((c) => c.id !== courseId),
+      enrollments: prev.enrollments.filter((e) => e.courseId !== courseId),
+    }));
+  }
+
+  function markAllPresent(courseId: string) {
+    setState((prev) => {
+      const today = new Date().toISOString().slice(0, 10);
+      const targetEnrollments = prev.enrollments.filter((e) => e.courseId === courseId);
+
+      const newRecords: AttendanceRecord[] = targetEnrollments.map((e) => ({
+        id: uid("at"),
+        enrollmentId: e.id,
+        date: today,
+        status: "present",
+        hoursCounted: e.sessionHours,
+      }));
+
+      const enrollments = prev.enrollments.map((e) =>
+        e.courseId === courseId
+          ? { ...e, hoursUsed: Math.min(e.hoursUsed + e.sessionHours, e.monthlyHours ?? Infinity) }
+          : e
+      );
+
+      return { ...prev, enrollments, attendance: [...newRecords, ...prev.attendance] };
+    });
+  }
+
   const value = useMemo<StoreContextValue>(
     () => ({
       ...state,
@@ -305,6 +347,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addStudent,
       addCourse,
       addEnrollment,
+      deleteStudent,
+      deleteCourse,
+      markAllPresent,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [state]

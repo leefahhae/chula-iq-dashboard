@@ -3,12 +3,25 @@
 import { useStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { AddCourseForm } from "@/components/manage/add-course-form";
 import { AddStudentForm } from "@/components/manage/add-student-form";
-import { GraduationCap, UserPlus } from "lucide-react";
+import { GraduationCap, UserPlus, Trash2 } from "lucide-react";
 
 export default function ManagePage() {
-  const { students, courses } = useStore();
+  const { students, courses, deleteStudent, deleteCourse } = useStore();
+
+  function handleDeleteCourse(id: string, name: string) {
+    if (window.confirm(`ลบคอร์ส "${name}" ใช่ไหม? นักเรียนที่ลงทะเบียนคอร์สนี้จะถูกถอนออกด้วย`)) {
+      deleteCourse(id);
+    }
+  }
+
+  function handleDeleteStudent(id: string, name: string) {
+    if (window.confirm(`ลบนักเรียน "${name}" ใช่ไหม? การลงทะเบียนคอร์สของนักเรียนคนนี้จะถูกลบด้วย`)) {
+      deleteStudent(id);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -62,11 +75,26 @@ export default function ManagePage() {
                   <p className="font-medium">{c.name}</p>
                   <p className="text-xs text-muted-foreground">{c.subject}</p>
                 </div>
-                <Badge variant={c.type === "private" ? "default" : "secondary"}>
-                  {c.type === "private" ? "เดี่ยว" : "กลุ่ม"}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={c.type === "private" ? "default" : "secondary"}>
+                    {c.type === "private" ? "เดี่ยว" : "กลุ่ม"}
+                  </Badge>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`ลบคอร์ส ${c.name}`}
+                    onClick={() => handleDeleteCourse(c.id, c.name)}
+                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
+            {courses.length === 0 && (
+              <p className="py-4 text-center text-sm text-muted-foreground">ยังไม่มีคอร์สในระบบ</p>
+            )}
           </CardContent>
         </Card>
 
@@ -81,9 +109,24 @@ export default function ManagePage() {
                 className="flex items-center justify-between gap-2 rounded-xl border border-border px-3 py-2 text-sm"
               >
                 <p className="font-medium">{s.name}</p>
-                <Badge variant="outline">{s.grade}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">{s.grade}</Badge>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`ลบนักเรียน ${s.name}`}
+                    onClick={() => handleDeleteStudent(s.id, s.name)}
+                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
+            {students.length === 0 && (
+              <p className="py-4 text-center text-sm text-muted-foreground">ยังไม่มีนักเรียนในระบบ</p>
+            )}
           </CardContent>
         </Card>
       </div>
