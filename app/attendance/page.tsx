@@ -1,0 +1,68 @@
+"use client";
+
+import * as React from "react";
+import { useStore } from "@/lib/store";
+import { CoursePriceSettings } from "@/components/attendance/course-price-settings";
+import { StudentAttendanceTable } from "@/components/attendance/student-attendance-table";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Users2 } from "lucide-react";
+
+export default function AttendancePage() {
+  const { courses, enrollments } = useStore();
+  const [courseId, setCourseId] = React.useState(courses[0]?.id ?? "");
+
+  const selectedCourse = courses.find((c) => c.id === courseId);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold sm:text-2xl">เช็คชื่อและคำนวณยอดเงินอัตโนมัติ</h1>
+        <p className="text-sm text-muted-foreground">
+          เลือกคอร์ส แล้วติ๊กเช็คชื่อได้ทันทีบนมือถือหรือแท็บเล็ต
+        </p>
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+        {courses.map((c) => {
+          const count = enrollments.filter((e) => e.courseId === c.id).length;
+          const active = c.id === courseId;
+          return (
+            <button
+              key={c.id}
+              onClick={() => setCourseId(c.id)}
+              className={cn(
+                "flex shrink-0 items-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-colors",
+                active
+                  ? "border-primary bg-primary text-white shadow-soft"
+                  : "border-border bg-white text-foreground/70 hover:border-primary-300"
+              )}
+            >
+              {c.name}
+              <Badge
+                variant={active ? "secondary" : "outline"}
+                className={cn(!active && "border-border", active && "bg-white/20 text-white")}
+              >
+                <Users2 className="h-3 w-3" /> {count}
+              </Badge>
+            </button>
+          );
+        })}
+      </div>
+
+      {selectedCourse && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Badge variant={selectedCourse.type === "private" ? "default" : "secondary"}>
+              {selectedCourse.type === "private" ? "คลาสเดี่ยว (Private)" : "คลาสกลุ่ม (Group)"}
+            </Badge>
+            <span className="text-sm text-muted-foreground">วิชา{selectedCourse.subject}</span>
+          </div>
+
+          <CoursePriceSettings course={selectedCourse} />
+          <StudentAttendanceTable course={selectedCourse} />
+        </div>
+      )}
+    </div>
+  );
+}
