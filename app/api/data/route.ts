@@ -9,6 +9,14 @@ import {
   expenseFromDb,
 } from "@/lib/db-mappers";
 
+// This route has no cookies()/headers() usage, so without this Next.js may
+// treat it as static and cache the response at build time — every request
+// would then replay that one frozen snapshot forever, making the app look
+// like it "loses" data on refresh even though Supabase is fine. Forcing
+// dynamic rendering guarantees every request actually re-queries the DB.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // Fetches everything the app needs in one round trip. The client store
 // (lib/store.tsx) calls this once on load instead of seeding from mock data
 // or localStorage.

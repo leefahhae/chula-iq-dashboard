@@ -5,6 +5,7 @@ import type {
   AttendanceRecord,
   Transaction,
   Expense,
+  LineInboxEntry,
 } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -23,6 +24,7 @@ export function studentFromDb(row: any): Student {
     parentLine: row.parent_line,
     parentFacebook: row.parent_facebook,
     phone: row.phone ?? undefined,
+    lineUserId: row.line_user_id ?? undefined,
   };
 }
 
@@ -34,6 +36,7 @@ export function studentToDb(s: {
   parentLine: string;
   parentFacebook: string;
   phone?: string;
+  lineUserId?: string;
 }) {
   return {
     id: s.id,
@@ -43,6 +46,16 @@ export function studentToDb(s: {
     parent_line: s.parentLine,
     parent_facebook: s.parentFacebook,
     phone: s.phone ?? null,
+    line_user_id: s.lineUserId ?? null,
+  };
+}
+
+export function lineInboxFromDb(row: any): LineInboxEntry {
+  return {
+    id: row.id,
+    lineUserId: row.line_user_id,
+    messageText: row.message_text,
+    createdAt: row.created_at,
   };
 }
 

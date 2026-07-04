@@ -11,19 +11,36 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useStore } from "@/lib/store";
 import { formatBaht, formatDateOnly } from "@/lib/utils";
 import { EXPENSE_CATEGORY_LABEL } from "@/lib/types";
-import { ImageIcon, Banknote, Landmark } from "lucide-react";
+import { ImageIcon, Banknote, Landmark, Search } from "lucide-react";
 import { EditExpenseDialog } from "@/components/expenses/edit-expense-dialog";
 
 export function ExpenseHistoryTable() {
   const { expenses } = useStore();
   const [viewingReceipt, setViewingReceipt] = React.useState<string | null>(null);
+  const [query, setQuery] = React.useState("");
+
+  const filtered = expenses.filter((ex) =>
+    `${ex.title} ${EXPENSE_CATEGORY_LABEL[ex.category]}`
+      .toLowerCase()
+      .includes(query.trim().toLowerCase())
+  );
 
   return (
     <>
+      <div className="relative mb-3">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="ค้นหารายจ่าย (ชื่อรายการ/หมวดหมู่)"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
       <div className="overflow-hidden rounded-2xl border border-border bg-white">
         <Table>
           <TableHeader>
@@ -38,7 +55,7 @@ export function ExpenseHistoryTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {expenses.map((ex) => (
+            {filtered.map((ex) => (
               <TableRow key={ex.id}>
                 <TableCell className="text-xs text-muted-foreground">
                   {formatDateOnly(ex.createdAt)}
@@ -77,6 +94,13 @@ export function ExpenseHistoryTable() {
                 </TableCell>
               </TableRow>
             ))}
+            {filtered.length === 0 && expenses.length > 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                  ไม่พบรายการที่ค้นหา
+                </TableCell>
+              </TableRow>
+            )}
             {expenses.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">

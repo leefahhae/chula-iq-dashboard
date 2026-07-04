@@ -22,5 +22,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|login|api/login|api/logout).*)"],
+  // api/line/webhook is excluded because LINE's servers call it directly
+  // (no browser session cookie) — it's protected instead by verifying the
+  // x-line-signature header inside the route itself (see lib/line.ts).
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|login|api/login|api/logout|api/line/webhook).*)",
+  ],
 };

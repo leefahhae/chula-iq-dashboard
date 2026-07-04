@@ -32,6 +32,20 @@ npm run dev
 
 ถ้ายังไม่ตั้งค่านี้ หน้าเว็บจะเด้งไปหน้า Login ตลอดและแจ้งว่ายังไม่ได้ตั้งรหัสผ่าน (เป็นการป้องกันไม่ให้ข้อมูลเปิดเผยโดยไม่ตั้งใจ)
 
+### ตั้งค่า LINE Official Account (ไม่บังคับ — เปิดใช้ปุ่ม "ส่งผ่าน LINE อัตโนมัติ")
+
+ถ้าไม่ตั้งค่านี้ เว็บยังใช้งานได้ปกติทุกอย่าง แค่ปุ่ม "ส่งผ่าน LINE อัตโนมัติ" ในหน้าแจ้งยอดผู้ปกครองจะยังใช้ไม่ได้ (ใช้วิธีคัดลอกข้อความไปวางเองแทนได้เหมือนเดิม)
+
+1. **สร้าง LINE Official Account + Messaging API channel**: ไปที่ [developers.line.biz](https://developers.line.biz) → สมัคร/ล็อกอินด้วยบัญชี LINE → สร้าง Provider → สร้าง Channel ประเภท **Messaging API** → ตั้งชื่อ OA (เช่น "Chula IQ")
+2. **ปิด auto-reply ของ LINE**: ไปที่ [LINE Official Account Manager](https://manager.line.biz) → เลือก OA ของคุณ → Settings → Response settings → ปิด "Greeting messages" และ "Auto-response messages" (ไม่งั้น LINE จะตอบข้อความอัตโนมัติทับ reply ของระบบเรา)
+3. **คัดลอกคีย์**: กลับไปที่ LINE Developers Console → เลือก channel → แท็บ **Messaging API**
+   - เลื่อนลงหา **Channel access token** → กด "Issue" ถ้ายังไม่มี → คัดลอกเก็บไว้
+   - แท็บ **Basic settings** → คัดลอก **Channel secret**
+4. **ตั้ง Webhook URL**: กลับไปแท็บ Messaging API → ช่อง Webhook URL → ใส่ `https://<โดเมนเว็บของคุณ>/api/line/webhook` → กด "Update" → กด "Verify" (ควรขึ้นสำเร็จหลังตั้งค่า environment variables ในข้อถัดไปและ deploy แล้ว) → เปิดสวิตช์ "Use webhook"
+5. **ตั้งค่า Environment Variables** (เหมือนขั้นตอน Supabase ด้านบน): เพิ่ม `LINE_CHANNEL_SECRET` และ `LINE_CHANNEL_ACCESS_TOKEN` ทั้งใน `.env.local` (ถ้ารันในเครื่อง) และใน Vercel → Environment Variables → redeploy
+6. **ให้ผู้ปกครองแอดเพื่อน**: หา QR code ของ OA ได้ที่ LINE Official Account Manager → Home → แชร์ QR ให้ผู้ปกครอง หรือใส่ในข้อความแจ้งยอดที่ส่งครั้งแรก
+7. **เชื่อมบัญชีผู้ปกครองกับนักเรียน**: หลังผู้ปกครองแอดเพื่อน/พิมพ์ข้อความมา จะเห็นการ์ด "ข้อความ LINE เข้าใหม่" ที่ด้านบนของหน้า "แจ้งยอดผู้ปกครอง" — เลือกนักเรียนที่ตรงกันแล้วกด "เชื่อมบัญชี" ครั้งเดียวต่อผู้ปกครองหนึ่งคน จากนั้นปุ่ม "ส่งผ่าน LINE อัตโนมัติ" จะใช้งานได้กับนักเรียนคนนั้น
+
 > โค้ดถูกเขียนและตรวจสอบด้วยมือ (manual review) แต่ยังไม่ได้รัน `npm install` / `npm run build` จริงในเครื่องที่พัฒนา เนื่องจากแซนด์บ็อกซ์ไม่มีสิทธิ์เข้าถึง npm registry — กรุณารัน `npm run build` อีกครั้งบนเครื่องของคุณเพื่อดักจับ error ที่อาจหลุดรอดการตรวจสอบด้วยตา แล้วแจ้งกลับมาได้หากเจอปัญหา
 
 ## โครงสร้างโปรเจกต์
@@ -39,9 +53,11 @@ npm run dev
 - `app/(app)/page.tsx` — Dashboard ภาพรวมการเงิน (รายรับ/รายจ่าย/กำไรสุทธิ)
 - `app/(app)/payment-entry/page.tsx` — ฟอร์มบันทึกการรับเงิน + ประวัติ 5 รายการล่าสุด
 - `app/(app)/attendance/page.tsx` — เช็คชื่อและคำนวณยอดเงินอัตโนมัติ (คลาสเดี่ยว/คลาสกลุ่ม)
-- `app/(app)/notifications/page.tsx` — สร้าง/คัดลอกข้อความแจ้งยอดผู้ปกครอง + เช็คคนค้างชำระ
-- `app/(app)/expenses/page.tsx` — บันทึกและจัดการรายจ่ายของสถาบัน
-- `app/(app)/manage/page.tsx` — เพิ่ม/ลบนักเรียนและคอร์ส
+- `app/(app)/notifications/page.tsx` — สร้าง/คัดลอกข้อความแจ้งยอดผู้ปกครอง + เช็คคนค้างชำระ + ส่งผ่าน LINE อัตโนมัติ + ค้นหานักเรียน
+- `app/(app)/expenses/page.tsx` — บันทึกและจัดการรายจ่ายของสถาบัน + ค้นหาในประวัติรายจ่าย
+- `app/(app)/manage/page.tsx` — เพิ่ม/ลบนักเรียนและคอร์ส + ค้นหาในรายการ
+- `app/api/export/route.ts` — สร้างไฟล์ Excel (.xlsx) สรุปรายรับ-รายจ่ายทั้งหมด ปุ่มดาวน์โหลดอยู่ที่หน้า Dashboard
+- `app/api/line/webhook/route.ts`, `app/api/line/push/route.ts`, `app/api/line/inbox/**`, `lib/line.ts`, `components/notifications/line-inbox-panel.tsx` — ระบบส่งแจ้งยอดผู้ปกครองผ่าน LINE อัตโนมัติ (ดูวิธีตั้งค่าด้านบน)
 - `app/(app)/layout.tsx` — ครอบทุกหน้าในกลุ่มนี้ด้วย `StoreProvider` + แถบเมนู (`AppShell`)
 - `app/login/page.tsx`, `app/api/login`, `app/api/logout`, `middleware.ts`, `lib/auth.ts` — ระบบล็อกอินรหัสผ่านเดียว
 - `supabase/schema.sql` — คำสั่งสร้างตารางฐานข้อมูลทั้งหมด (รันครั้งเดียวตอนตั้งโปรเจกต์ Supabase)

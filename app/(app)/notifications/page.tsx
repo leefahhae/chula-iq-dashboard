@@ -4,16 +4,19 @@ import * as React from "react";
 import { useStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { BillingMessageDialog } from "@/components/notifications/billing-message-dialog";
+import { LineInboxPanel } from "@/components/notifications/line-inbox-panel";
 import type { BillingLineItem } from "@/lib/billing-template";
 import { getEnrollmentBalance, getHoursUsedThisMonth } from "@/lib/analytics";
-import { MessageCircle, Facebook, GraduationCap, AlertCircle } from "lucide-react";
+import { MessageCircle, Facebook, GraduationCap, AlertCircle, Search } from "lucide-react";
 import { formatBaht } from "@/lib/utils";
 
 export default function NotificationsPage() {
   const { students, enrollments, transactions, attendance, getCourse } = useStore();
   const [onlyUnpaid, setOnlyUnpaid] = React.useState(false);
+  const [query, setQuery] = React.useState("");
 
   const studentBillingInfo = students.map((student) => {
     const studentEnrollments = enrollments.filter((e) => e.studentId === student.id);
@@ -35,9 +38,11 @@ export default function NotificationsPage() {
   const unpaidCount = studentBillingInfo.filter((s) => s.totalBalance > 0).length;
   const unpaidTotal = studentBillingInfo.reduce((sum, s) => sum + s.totalBalance, 0);
 
-  const visibleStudents = onlyUnpaid
-    ? studentBillingInfo.filter((s) => s.totalBalance > 0)
-    : studentBillingInfo;
+  const visibleStudents = studentBillingInfo
+    .filter((s) => (onlyUnpaid ? s.totalBalance > 0 : true))
+    .filter((s) =>
+      `${s.student.name} ${s.student.grade}`.toLowerCase().includes(query.trim().toLowerCase())
+    );
 
   return (
     <div className="space-y-6">
@@ -47,6 +52,8 @@ export default function NotificationsPage() {
           สร้างข้อความสรุปยอดอัตโนมัติ แล้วคัดลอกไปส่งใน LINE หรือ Facebook ของผู้ปกครองได้ทันที
         </p>
       </div>
+
+      <LineInboxPanel />
 
       <Card>
         <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
@@ -67,6 +74,16 @@ export default function NotificationsPage() {
           </label>
         </CardContent>
       </Card>
+
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="ค้นหานักเรียน (ชื่อ/ระดับชั้น)"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {visibleStudents.map(({ student, items, balances, totalBalance }) => (
@@ -141,7 +158,11 @@ export default function NotificationsPage() {
         ))}
         {visibleStudents.length === 0 && (
           <p className="col-span-full py-10 text-center text-sm text-muted-foreground">
-            ไม่มีนักเรียนที่ค้างชำระตอนนี้ 🎉
+            {query.trim()
+              ? "ไม่พบนักเรียนที่ค้นหา"
+              : onlyUnpaid
+                ? "ไม่มีนักเรียนที่ค้างชำระตอนนี้ 🎉"
+                : "ยังไม่มีนักเรียนในระบบ"}
           </p>
         )}
       </div>

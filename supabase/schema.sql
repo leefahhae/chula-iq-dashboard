@@ -10,8 +10,13 @@ create table if not exists students (
   parent_name text not null,
   parent_line text not null,
   parent_facebook text not null,
-  phone text
+  phone text,
+  line_user_id text
 );
+
+-- If you already ran this file once before line_user_id existed, run this
+-- separately in the SQL Editor to add the column without recreating the table:
+-- alter table students add column if not exists line_user_id text;
 
 create table if not exists courses (
   id text primary key,
@@ -67,6 +72,14 @@ create table if not exists expenses (
   created_at timestamptz not null default now()
 );
 
+create table if not exists line_inbox (
+  id text primary key,
+  line_user_id text not null,
+  message_text text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists line_inbox_user_idx on line_inbox(line_user_id);
+
 -- Lock every table down by default (deny-all for the public "anon"/"authenticated"
 -- roles). The app never uses the anon key — every request goes through Next.js
 -- API routes using the service_role key, which bypasses RLS entirely. This is
@@ -77,6 +90,7 @@ alter table enrollments enable row level security;
 alter table attendance enable row level security;
 alter table transactions enable row level security;
 alter table expenses enable row level security;
+alter table line_inbox enable row level security;
 
 -- ---------------------------------------------------------------------------
 -- OPTIONAL: starter demo data (same as the app's old built-in mock data).

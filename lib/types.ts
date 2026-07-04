@@ -16,9 +16,28 @@ export interface Student {
   name: string; // ชื่อเล่น/ชื่อเต็มของนักเรียน
   grade: string; // เช่น ม.6, ม.4
   parentName: string;
-  parentLine: string; // LINE ID / ชื่อบัญชี LINE
+  parentLine: string; // LINE ID / ชื่อบัญชี LINE (ข้อความอ้างอิงเฉยๆ ไม่ใช่ตัวที่ใช้ส่งอัตโนมัติ)
   parentFacebook: string; // ชื่อหรือลิงก์ Facebook
   phone?: string;
+  /**
+   * LINE Messaging API userId ของผู้ปกครอง — ได้มาหลังจากผู้ปกครองแอดไลน์ OA
+   * ของสถาบันแล้วแอดมินเชื่อมบัญชีให้ผ่านหน้า "แจ้งยอดผู้ปกครอง" (ดู
+   * LineInboxEntry ด้านล่าง) มีค่านี้แล้วถึงจะกดปุ่ม "ส่งผ่าน LINE อัตโนมัติ" ได้
+   */
+  lineUserId?: string;
+}
+
+/**
+ * A parent's LINE account after they add the institute's Official Account as
+ * a friend or send it a message, before an admin has manually matched it to a
+ * student record. Populated by app/api/line/webhook; resolved (and removed)
+ * once linked via app/api/line/inbox/[id].
+ */
+export interface LineInboxEntry {
+  id: string;
+  lineUserId: string;
+  messageText: string;
+  createdAt: string;
 }
 
 export interface Course {

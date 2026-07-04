@@ -8,6 +8,7 @@ import { RevenueChannelChart } from "@/components/dashboard/revenue-channel-char
 import { ExpenseCategoryChart } from "@/components/dashboard/expense-category-chart";
 import { TransactionsTable } from "@/components/dashboard/transactions-table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { formatBaht } from "@/lib/utils";
 import {
   Wallet,
@@ -16,6 +17,7 @@ import {
   Receipt,
   TrendingUp,
   TrendingDown,
+  FileSpreadsheet,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -29,9 +31,16 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold sm:text-2xl">ภาพรวมการเงิน</h1>
-        <p className="text-sm text-muted-foreground">สรุปยอดรับเงิน รายจ่าย และกำไรสุทธิของสถาบัน</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold sm:text-2xl">ภาพรวมการเงิน</h1>
+          <p className="text-sm text-muted-foreground">สรุปยอดรับเงิน รายจ่าย และกำไรสุทธิของสถาบัน</p>
+        </div>
+        <Button asChild variant="secondary" size="sm">
+          <a href="/api/export" download>
+            <FileSpreadsheet className="h-4 w-4" /> ส่งออก Excel (รายรับ-รายจ่ายทั้งหมด)
+          </a>
+        </Button>
       </div>
 
       {/* Top row: today's snapshot */}
