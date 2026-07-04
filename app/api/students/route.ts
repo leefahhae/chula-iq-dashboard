@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     const row = studentToDb({ id, ...body });
 
     const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase.from("students").insert(row as any).select().single();
+    const { data, error } = await (supabase.from("students") as any).insert(row).select().single();
     if (error) throw error;
 
     return NextResponse.json(studentFromDb(data));

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const rows = records.map((r) => attendanceToDb({ id: uid("at"), ...r }));
 
     const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase.from("attendance").insert(rows as any).select();
+    const { data, error } = await (supabase.from("attendance") as any).insert(rows).select();
     if (error) throw error;
 
     return NextResponse.json((data ?? []).map(attendanceFromDb));

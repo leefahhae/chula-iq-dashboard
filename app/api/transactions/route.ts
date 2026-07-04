@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     });
 
     const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase.from("transactions").insert(row as any).select().single();
+    const { data, error } = await (supabase.from("transactions") as any).insert(row).select().single();
     if (error) throw error;
 
     return NextResponse.json(transactionFromDb(data));

@@ -11,9 +11,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (body.monthlyFee !== undefined) patch.monthly_fee = body.monthlyFee;
 
     const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase
-      .from("courses")
-      .update(patch as any)
+    const { data, error } = await (supabase.from("courses") as any)
+      .update(patch)
       .eq("id", params.id)
       .select()
       .single();

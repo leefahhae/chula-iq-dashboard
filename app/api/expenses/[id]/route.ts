@@ -13,9 +13,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (body.receiptImage !== undefined) patch.receipt_image = body.receiptImage;
 
     const supabase = getSupabaseServerClient();
-    const { data, error } = await supabase
-      .from("expenses")
-      .update(patch as any)
+    const { data, error } = await (supabase.from("expenses") as any)
+      .update(patch)
       .eq("id", params.id)
       .select()
       .single();
