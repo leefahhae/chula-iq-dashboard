@@ -93,6 +93,29 @@ interface StoreContextValue {
     courseId: string,
     patch: { hourlyRate?: number; defaultMonthlyHours?: number; monthlyFee?: number }
   ) => void;
+  addStudent: (input: {
+    name: string;
+    grade: string;
+    parentName: string;
+    parentLine: string;
+    parentFacebook: string;
+    phone?: string;
+  }) => string;
+  addCourse: (input: {
+    name: string;
+    subject: string;
+    type: Course["type"];
+    hourlyRate?: number;
+    defaultMonthlyHours?: number;
+    monthlyFee?: number;
+  }) => string;
+  addEnrollment: (input: {
+    studentId: string;
+    courseId: string;
+    monthlyHours?: number;
+    monthlyFee?: number;
+    sessionHours?: number;
+  }) => void;
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null);
@@ -219,6 +242,53 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }));
   }
 
+  function addStudent(input: {
+    name: string;
+    grade: string;
+    parentName: string;
+    parentLine: string;
+    parentFacebook: string;
+    phone?: string;
+  }) {
+    const id = uid("st");
+    const student: Student = { id, ...input };
+    setState((prev) => ({ ...prev, students: [...prev.students, student] }));
+    return id;
+  }
+
+  function addCourse(input: {
+    name: string;
+    subject: string;
+    type: Course["type"];
+    hourlyRate?: number;
+    defaultMonthlyHours?: number;
+    monthlyFee?: number;
+  }) {
+    const id = uid("co");
+    const course: Course = { id, ...input };
+    setState((prev) => ({ ...prev, courses: [...prev.courses, course] }));
+    return id;
+  }
+
+  function addEnrollment(input: {
+    studentId: string;
+    courseId: string;
+    monthlyHours?: number;
+    monthlyFee?: number;
+    sessionHours?: number;
+  }) {
+    const enrollment: Enrollment = {
+      id: uid("en"),
+      studentId: input.studentId,
+      courseId: input.courseId,
+      monthlyHours: input.monthlyHours,
+      monthlyFee: input.monthlyFee,
+      hoursUsed: 0,
+      sessionHours: input.sessionHours ?? 1.5,
+    };
+    setState((prev) => ({ ...prev, enrollments: [...prev.enrollments, enrollment] }));
+  }
+
   const value = useMemo<StoreContextValue>(
     () => ({
       ...state,
@@ -232,6 +302,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updateEnrollmentHours,
       updateEnrollmentFee,
       updateCoursePrice,
+      addStudent,
+      addCourse,
+      addEnrollment,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [state]

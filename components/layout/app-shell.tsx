@@ -10,6 +10,7 @@ import {
   Send,
   Receipt,
   GraduationCap,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { href: "/attendance", label: "เช็คชื่อ/คำนวณยอด", shortLabel: "เช็คชื่อ", icon: CalendarCheck2 },
   { href: "/notifications", label: "แจ้งยอดผู้ปกครอง", shortLabel: "แจ้งยอด", icon: Send },
   { href: "/expenses", label: "รายจ่าย", shortLabel: "รายจ่าย", icon: Receipt },
+  { href: "/manage", label: "จัดการนักเรียน/คอร์ส", shortLabel: "จัดการ", icon: Users },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
