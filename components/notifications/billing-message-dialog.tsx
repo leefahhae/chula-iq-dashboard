@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { generateBillingMessage, type BillingLineItem } from "@/lib/billing-template";
 import type { Student } from "@/lib/types";
+import { useStore } from "@/lib/store";
 import { Copy, Check, Send } from "lucide-react";
 
 interface BillingMessageDialogProps {
@@ -22,16 +23,17 @@ interface BillingMessageDialogProps {
 }
 
 export function BillingMessageDialog({ student, items }: BillingMessageDialogProps) {
+  const { transactions } = useStore();
   const [open, setOpen] = React.useState(false);
   const [message, setMessage] = React.useState("");
   const [copied, setCopied] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
-      setMessage(generateBillingMessage(student, items));
+      setMessage(generateBillingMessage(student, items, transactions));
       setCopied(false);
     }
-  }, [open, student, items]);
+  }, [open, student, items, transactions]);
 
   async function handleCopy() {
     try {

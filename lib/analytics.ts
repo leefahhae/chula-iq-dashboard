@@ -1,4 +1,4 @@
-import type { Transaction, Expense, ExpenseCategory } from "./types";
+import type { Transaction, Expense, ExpenseCategory, Enrollment, Course } from "./types";
 
 function isSameDay(a: Date, b: Date) {
   return (
@@ -8,8 +8,44 @@ function isSameDay(a: Date, b: Date) {
   );
 }
 
-function isSameMonth(a: Date, b: Date) {
+export function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+}
+
+/**
+ * Computes what a single enrollment owes for the current billing month vs
+ * how much has actually been paid, based on recorded transactions.
+ * - Private classes: due = hours attended so far this month × hourly rate.
+ * - Group classes: due = the flat monthly fee (course default, or the
+ *   enrollment's own override for cases like intensive break-time pricing).
+ * `paid` only counts transactions tagged to this exact student+course within
+ * the current calendar month, so it resets automatically each new month.
+ */
+export function getEnrollmentBalance(
+  enrollment: Enrollment,
+  course: Course,
+  transactions: Transaction[],
+  now: Date = new Date()
+) {
+  const due =
+    course.type === "private"
+      ? Math.round(enrollment.hoursUsed * (course.hourlyRate ?? 0))
+      : Math.round(enrollment.monthlyFee ?? course.monthlyFee ?? 0);
+
+  const paid = sum(
+    transactions
+      .filter(
+        (t) =>
+          t.studentId === enrollment.studentId &&
+          t.courseId === enrollment.courseId &&
+          isSameMonth(new Date(t.createdAt), now)
+      )
+      .map((t) => t.amount)
+  );
+
+  const balance = Math.max(0, due - paid);
+
+  return { due, paid, balance, isPaid: balance <= 0 };
 }
 
 export function computeDashboardStats(transactions: Transaction[], expenses: Expense[]) {
