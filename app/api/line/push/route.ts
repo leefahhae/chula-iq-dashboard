@@ -11,8 +11,7 @@ export async function POST(request: Request) {
     }
 
     const supabase = getSupabaseServerClient();
-    const { data: student, error } = await supabase
-      .from("students")
+    const { data: student, error } = await (supabase.from("students") as any)
       .select("line_user_id, name")
       .eq("id", studentId)
       .maybeSingle();

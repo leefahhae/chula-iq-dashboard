@@ -27,8 +27,7 @@ export async function POST(request: Request) {
       if (!userId) continue;
 
       // Already linked to a student? Nothing to queue.
-      const { data: existingStudent } = await supabase
-        .from("students")
+      const { data: existingStudent } = await (supabase.from("students") as any)
         .select("id")
         .eq("line_user_id", userId)
         .maybeSingle();
