@@ -95,7 +95,7 @@ export function BillingMessageDialog({ student, items }: BillingMessageDialogPro
         {student.lineUserId ? (
           <div className="flex flex-col gap-1.5">
             {lineError && <p className="text-xs text-destructive">{lineError}</p>}
-            {lineSent && <p className="text-xs text-success">ส่งเข้า LINE ผู้ปกครองเรียบร้อยแล้ว</p>}
+            {lineSent && <p className="text-xs text-success-text">ส่งเข้า LINE ผู้ปกครองเรียบร้อยแล้ว</p>}
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">

@@ -4,17 +4,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl border-2 border-foreground text-sm font-bold shadow-brutal-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-soft hover:bg-primary-600",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-primary-100",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+        default: "bg-primary text-primary-foreground hover:bg-primary-300",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/70",
+        outline: "bg-background hover:bg-accent hover:text-accent-foreground",
+        ghost:
+          "border-transparent shadow-none hover:border-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-brutal-sm hover:translate-x-0 hover:translate-y-0",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         success: "bg-success text-success-foreground hover:bg-success/90",
-        link: "text-primary underline-offset-4 hover:underline",
+        link:
+          "border-transparent shadow-none text-primary-700 underline-offset-4 hover:underline hover:shadow-none hover:translate-x-0 hover:translate-y-0",
       },
       size: {
         default: "h-10 px-4 py-2",

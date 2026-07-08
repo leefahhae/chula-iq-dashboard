@@ -45,16 +45,16 @@ export default function AttendancePage() {
               key={c.id}
               onClick={() => setCourseId(c.id)}
               className={cn(
-                "flex shrink-0 items-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-colors",
+                "flex shrink-0 items-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all",
                 active
-                  ? "border-primary bg-primary text-white shadow-soft"
-                  : "border-border bg-white text-foreground/70 hover:border-primary-300"
+                  ? "border-foreground bg-primary text-primary-foreground shadow-brutal-sm"
+                  : "border-foreground/30 bg-white text-foreground/70 hover:border-foreground"
               )}
             >
               {c.name}
               <Badge
                 variant={active ? "secondary" : "outline"}
-                className={cn(!active && "border-border", active && "bg-white/20 text-white")}
+                className={cn(active && "border-foreground bg-white/40 text-primary-foreground")}
               >
                 <Users2 className="h-3 w-3" /> {count}
               </Badge>

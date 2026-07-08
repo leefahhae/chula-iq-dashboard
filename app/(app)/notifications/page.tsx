@@ -106,7 +106,7 @@ export default function NotificationsPage() {
             <CardContent className="space-y-3">
               <div className="space-y-1.5 text-sm">
                 <div className="flex items-center gap-2 text-foreground/80">
-                  <MessageCircle className="h-3.5 w-3.5 shrink-0 text-success" />
+                  <MessageCircle className="h-3.5 w-3.5 shrink-0 text-success-text" />
                   <span className="truncate">{student.parentLine}</span>
                 </div>
                 <div className="flex items-center gap-2 text-foreground/80">
@@ -142,7 +142,7 @@ export default function NotificationsPage() {
                         className={
                           balance > 0
                             ? "text-right text-[11px] font-medium text-destructive"
-                            : "text-right text-[11px] font-medium text-success"
+                            : "text-right text-[11px] font-medium text-success-text"
                         }
                       >
                         {balance > 0 ? `ค้าง ${formatBaht(balance)}` : "ชำระครบแล้ว"}

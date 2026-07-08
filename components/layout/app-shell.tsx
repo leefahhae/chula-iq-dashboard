@@ -55,9 +55,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-border bg-white/70 backdrop-blur-md md:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r-2 border-foreground bg-white md:flex">
         <div className="flex items-center gap-2.5 px-6 py-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-white shadow-soft">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl border-2 border-foreground bg-primary text-primary-foreground shadow-brutal-sm">
             <GraduationCap className="h-5 w-5" />
           </div>
           <div>
@@ -66,7 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3">
+        <nav className="flex-1 space-y-1.5 px-3">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
             const Icon = item.icon;
@@ -75,10 +75,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-xl border-2 px-3.5 py-2.5 text-sm font-bold transition-all",
                   active
-                    ? "bg-primary text-white shadow-soft"
-                    : "text-foreground/70 hover:bg-primary-50 hover:text-primary-700"
+                    ? "border-foreground bg-primary text-primary-foreground shadow-brutal-sm"
+                    : "border-transparent text-foreground/70 hover:border-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-brutal-sm"
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -88,16 +88,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="mx-3 mb-2 rounded-2xl bg-primary-50 p-4 text-xs text-primary-800">
+        <div className="mx-3 mb-2 rounded-2xl border-2 border-foreground bg-orchid p-4 text-xs font-medium text-orchid-foreground shadow-brutal-sm">
           💡 ข้อมูลทั้งหมดบันทึกลงฐานข้อมูล Supabase จริง ไม่หายเมื่อปิดเว็บ
         </div>
         <LogoutButton className="mx-3 mb-3" />
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-2.5 border-b border-border bg-white/80 px-4 py-3 backdrop-blur-md md:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-2.5 border-b-2 border-foreground bg-white px-4 py-3 md:hidden">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-primary text-primary-foreground">
             <GraduationCap className="h-4 w-4" />
           </div>
           <div>
@@ -126,7 +126,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => refresh()}
-                className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white"
+                className="rounded-xl border-2 border-foreground bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-brutal-sm transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
               >
                 ลองใหม่
               </button>
@@ -138,7 +138,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex items-stretch justify-around border-t border-border bg-white/95 px-1 py-1.5 backdrop-blur-md md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex items-stretch justify-around border-t-2 border-foreground bg-white px-1 py-1.5 md:hidden">
         {NAV_ITEMS.map((item) => {
           const active = pathname === item.href;
           const Icon = item.icon;
@@ -147,14 +147,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-medium transition-colors",
+                "flex flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-bold transition-colors",
                 active ? "text-primary-700" : "text-muted-foreground"
               )}
             >
               <span
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full",
-                  active && "bg-primary-100"
+                  "flex h-8 w-8 items-center justify-center rounded-full border-2",
+                  active ? "border-foreground bg-primary" : "border-transparent"
                 )}
               >
                 <Icon className="h-4 w-4" />

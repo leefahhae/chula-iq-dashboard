@@ -4,24 +4,28 @@
 
 @layer base {
   :root {
-    --background: 340 60% 99%;
-    --foreground: 340 15% 18%;
+    /* Neo-brutalist pastel palette (Pantone 9241 peach / 9320 pink / 677 rose /
+       14-3612 Orchid Bloom / 656 gray / 9044 mint). Borders and text are
+       near-black on purpose — flat pastel fills + thick black outlines +
+       hard offset shadows are the signature of this look. */
+    --background: 350 40% 96%;
+    --foreground: 240 15% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 340 15% 18%;
-    --primary: 340 82% 62%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 340 60% 96%;
-    --secondary-foreground: 340 30% 30%;
-    --muted: 340 30% 96%;
-    --muted-foreground: 340 10% 45%;
-    --accent: 340 70% 94%;
-    --accent-foreground: 340 40% 30%;
+    --card-foreground: 240 15% 10%;
+    --primary: 340 55% 78%;
+    --primary-foreground: 240 15% 10%;
+    --secondary: 350 65% 91%;
+    --secondary-foreground: 240 15% 10%;
+    --muted: 213 30% 90%;
+    --muted-foreground: 240 8% 35%;
+    --accent: 265 40% 84%;
+    --accent-foreground: 240 15% 10%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 340 30% 90%;
-    --input: 340 30% 88%;
-    --ring: 340 82% 62%;
-    --radius: 0.9rem;
+    --border: 240 15% 10%;
+    --input: 240 15% 10%;
+    --ring: 340 60% 55%;
+    --radius: 0.65rem;
   }
 }
 

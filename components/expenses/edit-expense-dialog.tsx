@@ -130,7 +130,7 @@ export function EditExpenseDialog({ expense }: { expense: Expense }) {
                 className={cn(
                   "flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-semibold transition-colors",
                   method === "cash"
-                    ? "border-warning bg-warning/10 text-warning"
+                    ? "border-warning bg-warning/10 text-warning-text"
                     : "border-border text-muted-foreground hover:border-warning/50"
                 )}
               >

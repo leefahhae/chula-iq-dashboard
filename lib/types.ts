@@ -116,10 +116,13 @@ export const EXPENSE_CATEGORY_LABEL: Record<ExpenseCategory, string> = {
   misc: "อื่นๆ",
 };
 
+// Pantone pastel palette (677 rose / 9320 pink / 9241 peach / 14-3612 orchid /
+// 9044 mint) — keeps the expense pie chart consistent with the site's
+// neo-brutalist reskin instead of the old vivid brand colors.
 export const EXPENSE_CATEGORY_COLOR: Record<ExpenseCategory, string> = {
-  payroll: "#f9457f",
-  materials: "#ff9fbe",
-  utilities: "#f59e0b",
-  marketing: "#38bdf8",
-  misc: "#a78bfa",
+  payroll: "#E8A9BC",
+  materials: "#F6D8DC",
+  utilities: "#F3C6A4",
+  marketing: "#C7AEDD",
+  misc: "#A9D9C0",
 };

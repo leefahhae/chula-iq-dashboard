@@ -133,7 +133,7 @@ export function AddCourseForm() {
           <GraduationCap className="h-4 w-4" /> {submitting ? "กำลังบันทึก..." : "เพิ่มคอร์ส"}
         </Button>
         {success && (
-          <span className="flex items-center gap-1.5 text-sm font-medium text-success">
+          <span className="flex items-center gap-1.5 text-sm font-medium text-success-text">
             <CheckCircle2 className="h-4 w-4" /> เพิ่มคอร์สแล้ว
           </span>
         )}

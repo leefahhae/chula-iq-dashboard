@@ -10,7 +10,9 @@ interface RevenueChannelChartProps {
   transfer: number;
 }
 
-const COLORS = ["#f59e0b", "#f9457f"];
+// Pantone 9241 (peach) for cash, 677 (rose) for transfer — matches the
+// site's neo-brutalist pastel palette instead of the old vivid brand colors.
+const COLORS = ["#F3C6A4", "#E8A9BC"];
 
 export function RevenueChannelChart({ cash, transfer }: RevenueChannelChartProps) {
   const data = [
@@ -44,7 +46,12 @@ export function RevenueChannelChart({ cash, transfer }: RevenueChannelChartProps
                   paddingAngle={3}
                 >
                   {data.map((_, idx) => (
-                    <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                    <Cell
+                      key={idx}
+                      fill={COLORS[idx % COLORS.length]}
+                      stroke="#15171a"
+                      strokeWidth={2}
+                    />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => formatBaht(value)} />

@@ -167,7 +167,7 @@ export function AddStudentForm() {
           <UserPlus className="h-4 w-4" /> {submitting ? "กำลังบันทึก..." : "เพิ่มนักเรียน"}
         </Button>
         {success && (
-          <span className="flex items-center gap-1.5 text-sm font-medium text-success">
+          <span className="flex items-center gap-1.5 text-sm font-medium text-success-text">
             <CheckCircle2 className="h-4 w-4" /> เพิ่มนักเรียนแล้ว
           </span>
         )}

@@ -11,11 +11,11 @@ interface StatCardProps {
 }
 
 const TONE_STYLES: Record<NonNullable<StatCardProps["tone"]>, { bg: string; icon: string }> = {
-  primary: { bg: "bg-primary-100", icon: "text-primary-600" },
-  success: { bg: "bg-success/10", icon: "text-success" },
-  warning: { bg: "bg-warning/10", icon: "text-warning" },
-  neutral: { bg: "bg-secondary", icon: "text-foreground/70" },
-  destructive: { bg: "bg-destructive/10", icon: "text-destructive" },
+  primary: { bg: "border-2 border-foreground bg-primary", icon: "text-primary-foreground" },
+  success: { bg: "border-2 border-foreground bg-success", icon: "text-success-foreground" },
+  warning: { bg: "border-2 border-foreground bg-warning", icon: "text-warning-foreground" },
+  neutral: { bg: "border-2 border-foreground bg-secondary", icon: "text-secondary-foreground" },
+  destructive: { bg: "border-2 border-foreground bg-destructive", icon: "text-destructive-foreground" },
 };
 
 export function StatCard({ label, value, icon: Icon, tone = "primary", subtext }: StatCardProps) {

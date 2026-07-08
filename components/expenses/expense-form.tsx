@@ -113,7 +113,7 @@ export function ExpenseForm() {
             className={cn(
               "flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-colors",
               method === "cash"
-                ? "border-warning bg-warning/10 text-warning"
+                ? "border-warning bg-warning/10 text-warning-text"
                 : "border-border text-muted-foreground hover:border-warning/50"
             )}
           >
@@ -146,7 +146,7 @@ export function ExpenseForm() {
           {submitting ? "กำลังบันทึก..." : "บันทึกรายจ่าย"}
         </Button>
         {success && (
-          <span className="flex items-center gap-1.5 text-sm font-medium text-success">
+          <span className="flex items-center gap-1.5 text-sm font-medium text-success-text">
             <CheckCircle2 className="h-4 w-4" /> บันทึกสำเร็จแล้ว
           </span>
         )}

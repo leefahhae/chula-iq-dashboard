@@ -79,7 +79,7 @@ export function StudentAttendanceTable({ course }: { course: Course }) {
                       <span
                         className={
                           quota > 0 && used > quota
-                            ? "text-sm font-medium text-warning"
+                            ? "text-sm font-medium text-warning-text"
                             : "text-sm font-medium"
                         }
                       >

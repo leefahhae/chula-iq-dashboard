@@ -58,12 +58,23 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))",
         },
         success: {
-          DEFAULT: "#16a34a",
-          foreground: "#ffffff",
+          // Pantone 9044 (mint) — DEFAULT for fills/badges/buttons; "text" is a
+          // darker shade of the same hue for use as plain readable text/icons
+          // (the pastel DEFAULT is too pale to read as text on a white bg).
+          DEFAULT: "#A9D9C0",
+          foreground: "#15171a",
+          text: "#1f7a4d",
         },
         warning: {
-          DEFAULT: "#f59e0b",
-          foreground: "#ffffff",
+          // Pantone 9241 (peach)
+          DEFAULT: "#F3C6A4",
+          foreground: "#15171a",
+          text: "#b5651d",
+        },
+        orchid: {
+          // Pantone 14-3612 "Orchid Bloom"
+          DEFAULT: "#C7AEDD",
+          foreground: "#15171a",
         },
       },
       borderRadius: {
@@ -76,6 +87,12 @@ const config: Config = {
       boxShadow: {
         soft: "0 2px 12px 0 rgb(249 69 127 / 0.08)",
         card: "0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04)",
+        // Neo-brutalist hard offset shadows — no blur, solid black, so
+        // cards/buttons read as physical blocks stacked on the page.
+        brutal: "4px 4px 0 0 hsl(var(--foreground))",
+        "brutal-sm": "2px 2px 0 0 hsl(var(--foreground))",
+        "brutal-lg": "6px 6px 0 0 hsl(var(--foreground))",
+        "brutal-pressed": "1px 1px 0 0 hsl(var(--foreground))",
       },
     },
   },

@@ -40,7 +40,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-soft">
+          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-foreground bg-primary text-primary-foreground shadow-brutal-sm">
             <GraduationCap className="h-6 w-6" />
           </div>
           <CardTitle>Chula IQ</CardTitle>

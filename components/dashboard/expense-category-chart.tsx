@@ -42,7 +42,12 @@ export function ExpenseCategoryChart({ byCategory }: ExpenseCategoryChartProps) 
                   paddingAngle={3}
                 >
                   {data.map((d) => (
-                    <Cell key={d.key} fill={EXPENSE_CATEGORY_COLOR[d.key]} />
+                    <Cell
+                      key={d.key}
+                      fill={EXPENSE_CATEGORY_COLOR[d.key]}
+                      stroke="#15171a"
+                      strokeWidth={2}
+                    />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => formatBaht(value)} />
